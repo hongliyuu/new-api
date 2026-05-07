@@ -1,6 +1,7 @@
 # 启动/更新：docker compose -f docker-compose.prod.yml up -d --build
 # 查看日志：docker logs -f new-api
 # 健康检查：curl http://127.0.0.1:3000/api/status
+# 容器网络：docker network connect new-api-network 1Panel-postgresql-ckGN && docker network connect new-api-network 1Panel-redis-Qusl && docker restart new-api
 
 version: '3.4'
 
@@ -38,4 +39,5 @@ services:
 
 networks:
   new-api-network:
+    name: new-api-network
     driver: bridge
