@@ -38,6 +38,4 @@ services:
 
 networks:
   new-api-network:
-    # 使用已有 Docker 网络，通过容器名连接 PostgreSQL / Redis
-    external: true
-    name: new-api-net
+    driver: bridge
