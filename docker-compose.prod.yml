@@ -1,0 +1,43 @@
+# 启动/更新：docker compose -f docker-compose.prod.yml up -d --build
+# 查看日志：docker logs -f new-api
+# 健康检查：curl http://127.0.0.1:3000/api/status
+
+version: '3.4'
+
+services:
+  new-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: new-api:latest
+    container_name: new-api
+    restart: always
+    command: --log-dir /app/logs
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - ./data:/data
+      - ./logs:/app/logs
+    environment:
+      - SQL_DSN=postgresql://postgres:password_PGQKa8@1Panel-postgresql-ckGN:5432/new-api
+      - REDIS_CONN_STRING=redis://:redis_y5b7wn@1Panel-redis-Qusl:6379
+      - TZ=Asia/Shanghai
+      - ERROR_LOG_ENABLED=true
+      - BATCH_UPDATE_ENABLED=true
+      - NODE_NAME=new-api-node-1
+      - STREAMING_TIMEOUT=600
+      - SESSION_SECRET=51118600dbf3d1c3c02aeea100b69e57d08000964b71f25e9efc7a7b1fca378d
+      - CRYPTO_SECRET=20154f2673870490769855f4a9003a0f7dacc8cc61c9df58863c83af238d81e5
+    networks:
+      - new-api-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O - http://localhost:3000/api/status | grep -o '\"success\":\\s*true' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+networks:
+  new-api-network:
+    # 使用已有 Docker 网络，通过容器名连接 PostgreSQL / Redis
+    external: true
+    name: new-api-net
