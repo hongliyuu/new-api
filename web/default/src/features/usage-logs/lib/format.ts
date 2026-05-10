@@ -214,11 +214,6 @@ export interface TieredBillingSummary {
   priceEntries: Array<{ field: string; shortLabel: string; price: number }>
 }
 
-/**
- * Whether the request payload reports any cache-related token usage. Used to
- * suppress cache pricing rows from the tiered breakdown when the request did
- * not exercise the cache path (mirrors the classic frontend behaviour).
- */
 export function hasAnyCacheTokens(
   other: LogOtherData | null | undefined
 ): boolean {
