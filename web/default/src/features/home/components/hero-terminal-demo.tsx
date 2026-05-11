@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef, type ReactNode } from 'react'
 import { cn } from '@/lib/utils'
+import { useStatus } from '@/hooks/use-status'
+import { CopyButton } from '@/components/copy-button'
 
 type AccentTone = 'emerald' | 'amber' | 'blue' | 'violet'
 
@@ -15,6 +17,7 @@ interface ApiDemoConfig {
   tokens: number
   latency: number
   accent: AccentTone
+  footer: string
 }
 
 const ACCENT_CLASSES: Record<
@@ -53,8 +56,8 @@ const ACCENT_CLASSES: Record<
 
 const API_DEMOS: ApiDemoConfig[] = [
   {
-    id: 'gpt-chat',
-    label: 'Chat',
+    id: 'openai-chat',
+    label: 'OpenAI Chat',
     method: 'POST',
     endpoint: '/v1/chat/completions',
     headers: ['"Authorization: Bearer sk-••••"'],
@@ -74,24 +77,30 @@ const API_DEMOS: ApiDemoConfig[] = [
     tokens: 27,
     latency: 142,
     accent: 'emerald',
+    footer: 'chat · sse',
   },
   {
-    id: 'responses',
-    label: 'Responses',
+    id: 'openai-image',
+    label: 'OpenAI Image',
     method: 'POST',
-    endpoint: '/v1/responses',
+    endpoint: '/v1/images/generations',
     headers: ['"Authorization: Bearer sk-••••"'],
-    request: ['"model": "your-model",', '"input": "..."'],
+    request: [
+      '"model": "gpt-image-1",',
+      '"prompt": "...",',
+      '"size": "1024x1024"',
+    ],
     response: [
       '{',
-      '  "output": [{ "type": "output_text", "text": <text> }],',
+      '  "data": [{ "url": <url> }],',
       '  "usage": { "total_tokens": <tokens> }',
       '}',
     ],
-    responseHighlights: ['<text>', '<tokens>'],
-    tokens: 31,
-    latency: 168,
+    responseHighlights: ['<url>', '<tokens>'],
+    tokens: 18,
+    latency: 224,
     accent: 'amber',
+    footer: 'image · openai',
   },
   {
     id: 'claude',
@@ -116,10 +125,11 @@ const API_DEMOS: ApiDemoConfig[] = [
     tokens: 29,
     latency: 156,
     accent: 'blue',
+    footer: 'messages · sse',
   },
   {
     id: 'gemini',
-    label: 'Gemini',
+    label: 'Gemini Chat',
     method: 'POST',
     endpoint: '/v1beta/models/{model}:generateContent',
     headers: ['"x-goog-api-key: sk-••••"'],
@@ -139,13 +149,64 @@ const API_DEMOS: ApiDemoConfig[] = [
     tokens: 25,
     latency: 93,
     accent: 'violet',
+    footer: 'generate · content',
+  },
+  {
+    id: 'gemini-image',
+    label: 'Gemini Image',
+    method: 'POST',
+    endpoint: '/v1beta/models/{model}:predict',
+    headers: ['"x-goog-api-key: sk-••••"'],
+    request: [
+      '"instances": [',
+      '  { "prompt": "..." }',
+      '],',
+      '"parameters": { "sampleCount": 1 }',
+    ],
+    response: [
+      '{',
+      '  "predictions": [{ "bytesBase64Encoded": <image> }],',
+      '  "metadata": { "latencyMs": <tokens> }',
+      '}',
+    ],
+    responseHighlights: ['<image>', '<tokens>'],
+    tokens: 12,
+    latency: 318,
+    accent: 'violet',
+    footer: 'image · imagen',
   },
 ]
 
 const CYCLE_INTERVAL = 4500
 const TRANSITION_MS = 220
 
+function getCurrentOrigin(): string {
+  if (typeof window === 'undefined') return ''
+  return window.location.origin
+}
+
+function getBaseUrl(status?: Record<string, unknown> | null): string {
+  const candidate =
+    status?.server_address ??
+    status?.serverAddress ??
+    (status?.data as Record<string, unknown> | undefined)?.server_address ??
+    (status?.data as Record<string, unknown> | undefined)?.serverAddress
+
+  if (typeof candidate === 'string' && candidate.trim()) {
+    return candidate.trim().replace(/\/+$/, '')
+  }
+
+  return getCurrentOrigin().replace(/\/+$/, '')
+}
+
+function withBaseUrl(baseUrl: string, endpoint: string): string {
+  if (/^https?:\/\//i.test(endpoint)) return endpoint
+  if (!baseUrl) return endpoint
+  return endpoint.startsWith('/') ? `${baseUrl}${endpoint}` : `${baseUrl}/${endpoint}`
+}
+
 export function HeroTerminalDemo() {
+  const { status } = useStatus()
   const [activeIndex, setActiveIndex] = useState(0)
   const [transitioning, setTransitioning] = useState(false)
   const intervalRef = useRef<ReturnType<typeof setInterval>>(undefined)
@@ -182,6 +243,10 @@ export function HeroTerminalDemo() {
 
   const demo = API_DEMOS[activeIndex]
   const accent = ACCENT_CLASSES[demo.accent]
+  const endpointUrl = withBaseUrl(
+    getBaseUrl(status as Record<string, unknown> | null),
+    demo.endpoint
+  )
 
   return (
     <div className='mx-auto mt-16 w-full max-w-2xl'>
@@ -195,7 +260,7 @@ export function HeroTerminalDemo() {
         {/* Tab strip */}
         <div
           className={cn(
-            'flex items-center gap-1 border-b px-2 sm:gap-1.5 sm:px-3',
+            'no-scrollbar flex items-center gap-1 overflow-x-auto border-b px-2 sm:gap-1.5 sm:px-3',
             'border-border/50 dark:border-white/[0.05]'
           )}
         >
@@ -207,7 +272,7 @@ export function HeroTerminalDemo() {
                 key={item.id}
                 onClick={() => handleSelect(index)}
                 className={cn(
-                  'relative -mb-px flex items-center gap-1.5 border-b-2 px-2.5 py-2.5 text-[11px] font-medium tracking-wide transition-colors sm:px-3 sm:text-xs',
+                  'relative -mb-px flex items-center gap-1.5 border-b-2 px-2 py-2.5 text-[10.5px] font-medium tracking-wide whitespace-nowrap transition-colors sm:px-2.5 sm:text-[11px] md:px-3 md:text-xs',
                   isActive
                     ? `${tone.activeBorder} ${tone.activeText}`
                     : 'text-foreground/40 hover:text-foreground/70 border-transparent'
@@ -242,18 +307,31 @@ export function HeroTerminalDemo() {
           </span>
           <code
             className={cn(
-              'text-foreground/75 truncate font-mono text-[12.5px] transition-opacity duration-200',
+              'text-foreground/75 min-w-0 flex-1 truncate font-mono text-[12.5px] transition-opacity duration-200',
               transitioning ? 'opacity-0' : 'opacity-100'
             )}
+            title={endpointUrl}
           >
-            {demo.endpoint}
+            {endpointUrl}
           </code>
+          <CopyButton
+            value={endpointUrl}
+            className='size-6 shrink-0'
+            iconClassName='size-3'
+            tooltip='Copy URL'
+            successTooltip='Copied!'
+            aria-label='Copy URL'
+          />
         </div>
 
         {/* Body — fixed rows so neither block shifts when switching demos */}
         <div className='grid h-[400px] grid-rows-[235px_minmax(0,1fr)] font-mono text-[12.5px] leading-[1.55]'>
           {/* Request */}
-          <RequestBlock demo={demo} transitioning={transitioning} />
+          <RequestBlock
+            demo={demo}
+            endpointUrl={endpointUrl}
+            transitioning={transitioning}
+          />
 
           {/* Response */}
           <ResponseBlock demo={demo} transitioning={transitioning} />
@@ -285,7 +363,7 @@ export function HeroTerminalDemo() {
             </span>
           </div>
           <span className='text-foreground/30 font-mono text-[10px] tracking-wider uppercase'>
-            stream · sse
+            {demo.footer}
           </span>
         </div>
       </div>
@@ -293,8 +371,12 @@ export function HeroTerminalDemo() {
   )
 }
 
-function RequestBlock(props: { demo: ApiDemoConfig; transitioning: boolean }) {
-  const { demo, transitioning } = props
+function RequestBlock(props: {
+  demo: ApiDemoConfig
+  endpointUrl: string
+  transitioning: boolean
+}) {
+  const { demo, endpointUrl, transitioning } = props
 
   return (
     <div className='relative px-5 py-4'>
@@ -307,7 +389,7 @@ function RequestBlock(props: { demo: ApiDemoConfig; transitioning: boolean }) {
       >
         <CodeLine>
           <Command>curl</Command> <Flag>-X</Flag> <Flag>POST</Flag>{' '}
-          <StringText>&quot;{demo.endpoint}&quot;</StringText>{' '}
+          <StringText>&quot;{endpointUrl}&quot;</StringText>{' '}
           <Muted>{'\\'}</Muted>
         </CodeLine>
         {demo.headers.map((header) => (
@@ -396,6 +478,18 @@ function renderResponseLine(line: string, demo: ApiDemoConfig): ReactNode {
           {`"${truncateResponse(demo)}"`}
         </Accent>
       )
+    } else if (placeholder === '<url>') {
+      segments.push(
+        <Accent key={`ph-${idx}`} accent={demo.accent}>
+          &quot;https://cdn.example.com/image.png&quot;
+        </Accent>
+      )
+    } else if (placeholder === '<image>') {
+      segments.push(
+        <Accent key={`ph-${idx}`} accent={demo.accent}>
+          &quot;iVBORw0KGgo...&quot;
+        </Accent>
+      )
     } else if (placeholder === '<tokens>') {
       segments.push(<NumberText key={`ph-${idx}`}>{demo.tokens}</NumberText>)
     } else if (placeholder === '<in>') {
@@ -425,8 +519,9 @@ function renderResponseLine(line: string, demo: ApiDemoConfig): ReactNode {
 
 function truncateResponse(demo: ApiDemoConfig): string {
   const map: Record<string, string> = {
-    'gpt-chat': 'Chat request routed.',
-    responses: 'Response workflow ready.',
+    'openai-chat': 'Chat request routed.',
+    'openai-image': 'Image generated.',
+    'gemini-image': 'Image bytes returned.',
     claude: 'Claude message routed.',
     gemini: 'Gemini request served.',
   }
