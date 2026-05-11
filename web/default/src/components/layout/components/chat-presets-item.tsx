@@ -63,7 +63,9 @@ function ChatMenuItem({
             />
           }
         >
-          <span>{preset.name}</span>
+          <span className='min-w-0 truncate' title={preset.name}>
+            {preset.name}
+          </span>
         </SidebarMenuSubButton>
       </SidebarMenuSubItem>
     )
@@ -76,8 +78,10 @@ function ChatMenuItem({
         isActive={false}
         className='justify-between'
       >
-        <span>{preset.name}</span>
-        <ExternalLink className='h-4 w-4' />
+        <span className='min-w-0 flex-1 truncate' title={preset.name}>
+          {preset.name}
+        </span>
+        <ExternalLink className='h-4 w-4 shrink-0' />
       </SidebarMenuSubButton>
     </SidebarMenuSubItem>
   )
@@ -98,15 +102,19 @@ function DropdownPresetItem({
       <DropdownMenuItem
         render={<Link to='/chat/$chatId' params={{ chatId: preset.id }} />}
       >
-        {preset.name}
+        <span className='min-w-0 truncate' title={preset.name}>
+          {preset.name}
+        </span>
       </DropdownMenuItem>
     )
   }
 
   return (
     <DropdownMenuItem onClick={() => onOpen(preset)}>
-      {preset.name}
-      <ExternalLink className='ml-auto h-4 w-4 opacity-70' />
+      <span className='min-w-0 truncate' title={preset.name}>
+        {preset.name}
+      </span>
+      <ExternalLink className='ml-auto h-4 w-4 shrink-0 opacity-70' />
     </DropdownMenuItem>
   )
 }
@@ -197,7 +205,7 @@ export function ChatPresetsItem({ item }: { item: NavChatPresets }) {
             <span>{item.title}</span>
             <ChevronRight className='ms-auto h-4 w-4 opacity-70' />
           </DropdownMenuTrigger>
-          <DropdownMenuContent align='start'>
+          <DropdownMenuContent align='start' className='w-64'>
             {visiblePresets.map((preset) => (
               <DropdownPresetItem
                 key={preset.id}
@@ -208,8 +216,10 @@ export function ChatPresetsItem({ item }: { item: NavChatPresets }) {
             {hasKeyDependentPresets && <DropdownMenuSeparator />}
             {hasKeyDependentPresets && isKeyPending && (
               <DropdownMenuItem disabled>
-                <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                {loadingMessage}
+                <Loader2 className='mr-2 h-4 w-4 shrink-0 animate-spin' />
+                <span className='min-w-0 truncate' title={loadingMessage}>
+                  {loadingMessage}
+                </span>
               </DropdownMenuItem>
             )}
           </DropdownMenuContent>
@@ -246,9 +256,15 @@ export function ChatPresetsItem({ item }: { item: NavChatPresets }) {
           ))}
           {hasKeyDependentPresets && isKeyPending && (
             <SidebarMenuSubItem>
-              <SidebarMenuSubButton aria-disabled='true' tabIndex={-1}>
-                <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                {loadingMessage}
+              <SidebarMenuSubButton
+                aria-disabled='true'
+                tabIndex={-1}
+                className='h-auto min-h-7'
+              >
+                <Loader2 className='mr-2 h-4 w-4 shrink-0 animate-spin' />
+                <span className='min-w-0 flex-1 truncate' title={loadingMessage}>
+                  {loadingMessage}
+                </span>
               </SidebarMenuSubButton>
             </SidebarMenuSubItem>
           )}
