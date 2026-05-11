@@ -51,12 +51,14 @@ export const THEME_PRESETS = [
 export type ThemePreset = (typeof THEME_PRESETS)[number]['value']
 export type ThemeRadius = 'default' | 'none' | 'sm' | 'md' | 'lg' | 'xl'
 export type ThemeScale = 'default' | 'sm' | 'lg'
+export type ThemeFontSize = 'default' | 'sm' | 'lg'
 export type ContentLayout = 'full' | 'centered'
 
 export type ThemeCustomization = {
   preset: ThemePreset
   radius: ThemeRadius
   scale: ThemeScale
+  fontSize: ThemeFontSize
   contentLayout: ContentLayout
 }
 
@@ -64,6 +66,7 @@ export const DEFAULT_THEME_CUSTOMIZATION: ThemeCustomization = {
   preset: 'default',
   radius: 'default',
   scale: 'default',
+  fontSize: 'default',
   contentLayout: 'full',
 }
 
@@ -86,6 +89,12 @@ export const THEME_SCALE_VALUES: ReadonlySet<ThemeScale> = new Set([
   'lg',
 ])
 
+export const THEME_FONT_SIZE_VALUES: ReadonlySet<ThemeFontSize> = new Set([
+  'default',
+  'sm',
+  'lg',
+])
+
 export const CONTENT_LAYOUT_VALUES: ReadonlySet<ContentLayout> = new Set([
   'full',
   'centered',
@@ -95,5 +104,6 @@ export const THEME_COOKIE_KEYS = {
   preset: 'theme_preset',
   radius: 'theme_radius',
   scale: 'theme_scale',
+  fontSize: 'theme_font_size',
   contentLayout: 'theme_content_layout',
 } as const

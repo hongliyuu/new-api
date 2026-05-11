@@ -12,10 +12,12 @@ import {
   type ContentLayout,
   DEFAULT_THEME_CUSTOMIZATION,
   THEME_COOKIE_KEYS,
+  THEME_FONT_SIZE_VALUES,
   THEME_PRESET_VALUES,
   THEME_RADIUS_VALUES,
   THEME_SCALE_VALUES,
   type ThemeCustomization,
+  type ThemeFontSize,
   type ThemePreset,
   type ThemeRadius,
   type ThemeScale,
@@ -49,6 +51,7 @@ type ThemeCustomizationContextType = {
   setPreset: (preset: ThemePreset) => void
   setRadius: (radius: ThemeRadius) => void
   setScale: (scale: ThemeScale) => void
+  setFontSize: (fontSize: ThemeFontSize) => void
   setContentLayout: (contentLayout: ContentLayout) => void
   resetCustomization: () => void
 }
@@ -63,6 +66,7 @@ const FALLBACK_CONTEXT: ThemeCustomizationContextType = {
   setPreset: () => {},
   setRadius: () => {},
   setScale: () => {},
+  setFontSize: () => {},
   setContentLayout: () => {},
   resetCustomization: () => {},
 }
@@ -92,6 +96,13 @@ export function ThemeCustomizationProvider(props: {
       THEME_COOKIE_KEYS.scale,
       THEME_SCALE_VALUES,
       DEFAULT_THEME_CUSTOMIZATION.scale
+    )
+  )
+  const [fontSize, _setFontSize] = useState<ThemeFontSize>(() =>
+    readCookie<ThemeFontSize>(
+      THEME_COOKIE_KEYS.fontSize,
+      THEME_FONT_SIZE_VALUES,
+      DEFAULT_THEME_CUSTOMIZATION.fontSize
     )
   )
   const [contentLayout, _setContentLayout] = useState<ContentLayout>(() =>
@@ -126,6 +137,13 @@ export function ThemeCustomizationProvider(props: {
   }, [scale])
 
   useEffect(() => {
+    applyAttribute(
+      'data-theme-font-size',
+      fontSize === DEFAULT_THEME_CUSTOMIZATION.fontSize ? null : fontSize
+    )
+  }, [fontSize])
+
+  useEffect(() => {
     applyAttribute('data-theme-content-layout', contentLayout)
   }, [contentLayout])
 
@@ -156,6 +174,15 @@ export function ThemeCustomizationProvider(props: {
     }
   }, [])
 
+  const setFontSize = useCallback((value: ThemeFontSize) => {
+    _setFontSize(value)
+    if (value === DEFAULT_THEME_CUSTOMIZATION.fontSize) {
+      removeCookie(THEME_COOKIE_KEYS.fontSize)
+    } else {
+      setCookie(THEME_COOKIE_KEYS.fontSize, value, COOKIE_MAX_AGE)
+    }
+  }, [])
+
   const setContentLayout = useCallback((value: ContentLayout) => {
     _setContentLayout(value)
     if (value === DEFAULT_THEME_CUSTOMIZATION.contentLayout) {
@@ -169,16 +196,18 @@ export function ThemeCustomizationProvider(props: {
     setPreset(DEFAULT_THEME_CUSTOMIZATION.preset)
     setRadius(DEFAULT_THEME_CUSTOMIZATION.radius)
     setScale(DEFAULT_THEME_CUSTOMIZATION.scale)
+    setFontSize(DEFAULT_THEME_CUSTOMIZATION.fontSize)
     setContentLayout(DEFAULT_THEME_CUSTOMIZATION.contentLayout)
-  }, [setPreset, setRadius, setScale, setContentLayout])
+  }, [setPreset, setRadius, setScale, setFontSize, setContentLayout])
 
   const value = useMemo<ThemeCustomizationContextType>(
     () => ({
       defaults: DEFAULT_THEME_CUSTOMIZATION,
-      customization: { preset, radius, scale, contentLayout },
+      customization: { preset, radius, scale, fontSize, contentLayout },
       setPreset,
       setRadius,
       setScale,
+      setFontSize,
       setContentLayout,
       resetCustomization,
     }),
@@ -186,10 +215,12 @@ export function ThemeCustomizationProvider(props: {
       preset,
       radius,
       scale,
+      fontSize,
       contentLayout,
       setPreset,
       setRadius,
       setScale,
+      setFontSize,
       setContentLayout,
       resetCustomization,
     ]

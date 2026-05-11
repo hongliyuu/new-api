@@ -132,7 +132,7 @@ export function PublicHeader(props: PublicHeaderProps) {
                       href={link.href}
                       target='_blank'
                       rel='noopener noreferrer'
-                      className='text-muted-foreground hover:text-foreground rounded-lg px-3 py-1.5 text-[13px] font-medium transition-colors duration-200'
+                      className='text-muted-foreground hover:text-foreground rounded-lg px-3 py-1.5 text-sm font-medium transition-colors duration-200'
                     >
                       {t(link.title)}
                     </a>
@@ -143,7 +143,7 @@ export function PublicHeader(props: PublicHeaderProps) {
                     key={i}
                     to={link.href}
                     className={cn(
-                      'rounded-lg px-3 py-1.5 text-[13px] font-medium transition-colors duration-200',
+                      'rounded-lg px-3 py-1.5 text-sm font-medium transition-colors duration-200',
                       isActive
                         ? 'text-foreground'
                         : 'text-muted-foreground hover:text-foreground'

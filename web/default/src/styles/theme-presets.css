@@ -356,6 +356,27 @@
   --spacing: 0.28rem;
 }
 
+[data-theme-font-size='sm'] {
+  --top-nav-font-size: 0.82rem;
+  --text-xs: 0.7rem;
+  --text-sm: 0.8rem;
+  --text-base: 0.92rem;
+  --text-lg: 1.03rem;
+  --text-xl: 1.15rem;
+  --text-2xl: 1.4rem;
+  --text-3xl: 1.75rem;
+}
+[data-theme-font-size='lg'] {
+  --top-nav-font-size: 1rem;
+  --text-xs: 0.82rem;
+  --text-sm: 0.94rem;
+  --text-base: 1.08rem;
+  --text-lg: 1.2rem;
+  --text-xl: 1.35rem;
+  --text-2xl: 1.65rem;
+  --text-3xl: 2rem;
+}
+
 /* ── Content layout ───────────────────────────────────────────────────── */
 /* `centered` clamps inset content to a comfortable reading width on large screens.
  * Targets every direct child of <SidebarInset> so router outlet wrappers and

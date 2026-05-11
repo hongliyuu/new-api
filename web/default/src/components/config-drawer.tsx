@@ -16,6 +16,7 @@ import { IconThemeSystem } from '@/assets/custom/icon-theme-system'
 import {
   type ContentLayout,
   THEME_PRESETS,
+  type ThemeFontSize,
   type ThemePreset,
   type ThemeRadius,
   type ThemeScale,
@@ -82,6 +83,7 @@ export function ConfigDrawer() {
           <PresetConfig />
           <RadiusConfig />
           <ScaleConfig />
+          <FontSizeConfig />
           <SidebarConfig />
           <LayoutConfig />
           <ContentLayoutConfig />
@@ -417,6 +419,74 @@ function ScaleConfig() {
                 aria-hidden='true'
               />
               <ScalePreview rows={option.rows} rowGap={option.rowGap} />
+            </div>
+            <div className='mt-1.5 truncate text-center text-xs'>
+              {option.label}
+            </div>
+          </Item>
+        ))}
+      </Radio>
+    </div>
+  )
+}
+
+function FontSizeConfig() {
+  const { t } = useTranslation()
+  const { defaults, customization, setFontSize } = useThemeCustomization()
+  const fontSizeOptions: {
+    value: ThemeFontSize
+    label: string
+    preview: string
+  }[] = [
+    { value: 'sm', label: t('Small'), preview: 'A' },
+    { value: 'default', label: t('Default'), preview: 'A' },
+    { value: 'lg', label: t('Large'), preview: 'A' },
+  ]
+  return (
+    <div>
+      <SectionTitle
+        title={t('Font size')}
+        showReset={customization.fontSize !== defaults.fontSize}
+        onReset={() => setFontSize(defaults.fontSize)}
+      />
+      <Radio
+        value={customization.fontSize}
+        onValueChange={(v) => setFontSize(v as ThemeFontSize)}
+        className='grid w-full grid-cols-3 gap-4'
+        aria-label={t('Select font size')}
+      >
+        {fontSizeOptions.map((option) => (
+          <Item
+            key={option.value}
+            value={option.value}
+            className='group flex flex-col items-stretch outline-none'
+            aria-label={option.label}
+          >
+            <div
+              className={cn(
+                'ring-border relative flex h-12 items-center justify-center rounded-md ring-[1px] transition',
+                'group-data-checked:ring-primary group-data-checked:shadow-md',
+                'group-focus-visible:ring-2',
+                'group-hover:ring-primary/60'
+              )}
+            >
+              <CircleCheck
+                className={cn(
+                  'fill-primary absolute top-0 right-0 z-10 size-5 translate-x-1/2 -translate-y-1/2 stroke-white',
+                  'group-data-unchecked:hidden'
+                )}
+                aria-hidden='true'
+              />
+              <span
+                className={cn(
+                  'font-semibold',
+                  option.value === 'sm' && 'text-sm',
+                  option.value === 'default' && 'text-base',
+                  option.value === 'lg' && 'text-xl'
+                )}
+              >
+                {option.preview}
+              </span>
             </div>
             <div className='mt-1.5 truncate text-center text-xs'>
               {option.label}
