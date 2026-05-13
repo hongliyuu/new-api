@@ -16,6 +16,7 @@ interface ComboboxInputProps {
   onValueChange: (value: string) => void
   placeholder?: string
   emptyText?: string
+  allowCustomValue?: boolean
   className?: string
   id?: string
 }
@@ -26,30 +27,57 @@ export function ComboboxInput({
   onValueChange,
   placeholder = 'Select or type...',
   emptyText = 'No option found.',
+  allowCustomValue = true,
   className,
   id,
 }: ComboboxInputProps) {
   const { t } = useTranslation()
   const [open, setOpen] = React.useState(false)
   const [highlightedIndex, setHighlightedIndex] = React.useState(-1)
+  const [inputValue, setInputValue] = React.useState('')
   const containerRef = React.useRef<HTMLDivElement>(null)
   const inputRef = React.useRef<HTMLInputElement>(null)
   const listRef = React.useRef<HTMLUListElement>(null)
 
+  const selectedOption = React.useMemo(
+    () => options.find((option) => option.value === value),
+    [options, value]
+  )
+
+  const displayValue = open ? inputValue : selectedOption?.label || value
+
   const filteredOptions = React.useMemo(() => {
-    if (!value.trim()) return options
-    const search = value.toLowerCase().trim()
+    const search = inputValue.toLowerCase().trim()
+    if (!search) return options
     return options.filter(
       (option) =>
         option.label.toLowerCase().includes(search) ||
         option.value.toLowerCase().includes(search)
     )
-  }, [options, value])
+  }, [inputValue, options])
 
   // Reset highlight when filtered options change
   React.useEffect(() => {
     setHighlightedIndex(-1)
   }, [filteredOptions])
+
+  const commitInputValue = React.useCallback(() => {
+    const nextValue = inputValue.trim()
+    if (!nextValue) return
+    if (!allowCustomValue) return
+    const exactOption = options.find(
+      (option) =>
+        option.value.toLowerCase() === nextValue.toLowerCase() ||
+        option.label.toLowerCase() === nextValue.toLowerCase()
+    )
+    onValueChange(exactOption?.value ?? nextValue)
+  }, [allowCustomValue, inputValue, onValueChange, options])
+
+  const closeDropdown = React.useCallback(() => {
+    commitInputValue()
+    setOpen(false)
+    setInputValue('')
+  }, [commitInputValue])
 
   // Handle click outside to close
   React.useEffect(() => {
@@ -60,17 +88,18 @@ export function ComboboxInput({
         containerRef.current &&
         !containerRef.current.contains(e.target as Node)
       ) {
-        setOpen(false)
+        closeDropdown()
       }
     }
 
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [open])
+  }, [closeDropdown, open])
 
   const handleSelect = (selectedValue: string) => {
     onValueChange(selectedValue)
     setOpen(false)
+    setInputValue('')
     inputRef.current?.focus()
   }
 
@@ -100,13 +129,13 @@ export function ComboboxInput({
         if (highlightedIndex >= 0 && filteredOptions[highlightedIndex]) {
           handleSelect(filteredOptions[highlightedIndex].value)
         } else {
-          // No highlighted option, just close the dropdown and keep current value
-          setOpen(false)
+          closeDropdown()
         }
         break
       case 'Escape':
         e.preventDefault()
         setOpen(false)
+        setInputValue('')
         break
     }
   }
@@ -118,7 +147,7 @@ export function ComboboxInput({
     item?.scrollIntoView({ block: 'nearest' })
   }, [highlightedIndex])
 
-  const showDropdown = open && (filteredOptions.length > 0 || value.trim())
+  const showDropdown = open && (filteredOptions.length > 0 || inputValue.trim())
 
   return (
     <div ref={containerRef} className='relative'>
@@ -132,12 +161,15 @@ export function ComboboxInput({
         aria-autocomplete='list'
         autoComplete='off'
         placeholder={placeholder}
-        value={value}
+        value={displayValue}
         onChange={(e) => {
-          onValueChange(e.target.value)
+          setInputValue(e.target.value)
           if (!open) setOpen(true)
         }}
-        onFocus={() => setOpen(true)}
+        onFocus={() => {
+          setInputValue('')
+          setOpen(true)
+        }}
         onKeyDown={handleKeyDown}
         className={cn('pr-9', className)}
       />
@@ -158,7 +190,7 @@ export function ComboboxInput({
                   aria-selected={value === option.value}
                   data-highlighted={index === highlightedIndex}
                   className={cn(
-                    'relative flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm select-none',
+                    'relative flex cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm select-none hover:bg-accent hover:text-accent-foreground',
                     index === highlightedIndex &&
                       'bg-accent text-accent-foreground',
                     value === option.value && 'font-medium'
@@ -183,9 +215,11 @@ export function ComboboxInput({
           ) : (
             <div className='px-2 py-6 text-center text-sm'>
               {emptyText}
-              {value.trim() && (
+              {allowCustomValue && inputValue.trim() && (
                 <div className='text-muted-foreground mt-1 text-xs'>
-                  {t('Press Enter to use "{{value}}"', { value: value.trim() })}
+                  {t('Press Enter to use "{{value}}"', {
+                    value: inputValue.trim(),
+                  })}
                 </div>
               )}
             </div>
