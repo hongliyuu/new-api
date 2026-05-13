@@ -116,6 +116,17 @@ export const CHANNEL_TYPE_CONFIGS: Record<number, ChannelTypeConfig> = {
       baseUrl: 'Default: https://api.replicate.com',
     },
   },
+  58: {
+    id: 58,
+    name: CHANNEL_TYPES[58],
+    icon: 'nvidia',
+    defaultBaseUrl: 'https://integrate.api.nvidia.com',
+    hints: {
+      key: 'NVIDIA API Key, e.g., nvapi-...',
+      models: 'meta/llama-3.1-8b-instruct,nvidia/llama-3.1-nemotron-nano-vl-8b-v1',
+      baseUrl: 'Default: https://integrate.api.nvidia.com',
+    },
+  },
 }
 
 /**
